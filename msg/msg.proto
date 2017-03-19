@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package msg;
+
+service kv{
+    rpc Op(req) returns (resp){}
+}
+
+message req{
+    int32 op=1;
+    bytes key=2;
+    bytes value=3;
+}
+
+message resp{
+    int32 status=1;
+}
+
+message dump{
+    bytes key=1;
+    bytes value=2;
+}
