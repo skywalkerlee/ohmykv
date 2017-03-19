@@ -34,13 +34,23 @@ var Leader *leader
 
 func init() {
 	Ohmkvcfg = new(config)
+	Leader = new(leader)
 	if _, err := toml.DecodeFile("./ohmkv.conf", Ohmkvcfg); err != nil {
 		logs.Error(err)
 		os.Exit(1)
 	}
-	Leader = new(leader)
 	logs.SetLogger("console")
 	logs.SetLogger(logs.AdapterFile, `{"filename":"./omq.log"}`)
 	logs.EnableFuncCallDepth(true)
 	logs.SetLogFuncCallDepth(3)
+	err := os.MkdirAll(Ohmkvcfg.Raft.StorageBackendPath, 0777)
+	if err != nil {
+		logs.Error(err)
+		os.Exit(1)
+	}
+	err = os.MkdirAll(Ohmkvcfg.Raft.PeerStorage, 0777)
+	if err != nil {
+		logs.Error(err)
+		os.Exit(1)
+	}
 }

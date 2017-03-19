@@ -38,7 +38,7 @@ func (fsm *storageFSM) Apply(log *raft.Log) interface{} {
 		fsm.storage.Put(msg.GetKey(), msg.GetValue())
 	} else if msg.GetOp() == 2 {
 		fsm.storage.Del(msg.GetKey())
-	} else {
+	} else if msg.GetOp() == 3 {
 		config.Leader.Addr = string(msg.GetKey()) + ":" + string(msg.GetValue())
 	}
 	return "Apply Successful"

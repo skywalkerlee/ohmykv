@@ -21,6 +21,10 @@ type Service struct {
 }
 
 func (service *Service) Op(ctx context.Context, req *msg.Req) (*msg.Resp, error) {
+	if req.GetOp() == 4 {
+		service.Cluster.Raft.AddPeer("127.0.0.1:12004")
+		return &msg.Resp{Status: 1}, nil
+	}
 	tmp, err := proto.Marshal(req)
 	if err != nil {
 		logs.Error(err)
@@ -38,7 +42,6 @@ func (service *Service) Op(ctx context.Context, req *msg.Req) (*msg.Resp, error)
 					return &msg.Resp{Status: 1}, nil
 				}
 			}
-			logs.Info(config.Leader.Addr)
 			conn, err := grpc.Dial(config.Leader.Addr, grpc.WithInsecure())
 			if err != nil {
 				logs.Error(err)

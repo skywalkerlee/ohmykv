@@ -18,7 +18,7 @@ type Cluster struct {
 	Raft       *raft.Raft
 }
 
-func NewCluster() *Cluster {
+func NewCluster(add bool) *Cluster {
 	cfg := raft.DefaultConfig()
 	memStore := raft.NewInmemStore()
 	if err := os.RemoveAll(config.Ohmkvcfg.Raft.StorageBackendPath); err != nil {
@@ -39,16 +39,17 @@ func NewCluster() *Cluster {
 		os.Exit(1)
 	}
 	peerStorage := raft.NewJSONPeers(config.Ohmkvcfg.Raft.PeerStorage, tran)
-	ps := config.Ohmkvcfg.Raft.Peers
-	logs.Debug(ps)
-	peerStorage.SetPeers(ps)
-	ps, err = peerStorage.Peers()
+	peerStorage.SetPeers(config.Ohmkvcfg.Raft.Peers)
 	if err != nil {
 		logs.Error(err)
 		os.Exit(1)
 	}
-	logs.Debug(ps)
-	r, err := raft.NewRaft(cfg, fsm, memStore, memStore, snap, peerStorage, tran)
+	r := &raft.Raft{}
+	if add {
+		r, err = raft.NewRaft(cfg, fsm, memStore, memStore, snap, nil, tran)
+	} else {
+		r, err = raft.NewRaft(cfg, fsm, memStore, memStore, snap, peerStorage, tran)
+	}
 	if err != nil {
 		logs.Error(err)
 		os.Exit(1)
