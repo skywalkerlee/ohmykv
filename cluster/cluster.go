@@ -6,13 +6,16 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/logs"
+	"github.com/gogo/protobuf/proto"
 	"github.com/hashicorp/raft"
 	"github.com/skywalkerlee/ohmykv/config"
+	"github.com/skywalkerlee/ohmykv/msg"
 	"github.com/skywalkerlee/ohmykv/storage"
 )
 
 type Cluster struct {
-	raft *raft.Raft
+	Leaderaddr string
+	Raft       *raft.Raft
 }
 
 func NewCluster() *Cluster {
@@ -50,5 +53,30 @@ func NewCluster() *Cluster {
 		logs.Error(err)
 		os.Exit(1)
 	}
-	return &Cluster{r}
+	go func() {
+		for {
+			logs.Debug(r.Leader())
+			time.Sleep(time.Second)
+		}
+	}()
+	return &Cluster{Raft: r}
+}
+
+func (cluster *Cluster) Sync() {
+	for {
+		time.Sleep(time.Second * 3)
+		if cluster.Raft.Leader() == config.Ohmkvcfg.Raft.Addr+":"+config.Ohmkvcfg.Raft.Port {
+			config.Leader.Addr = config.Ohmkvcfg.Raft.Addr + ":" + config.Ohmkvcfg.Ohmkv.Port
+			msg := &msg.Req{
+				Op:    3,
+				Key:   []byte(config.Ohmkvcfg.Raft.Addr),
+				Value: []byte(config.Ohmkvcfg.Ohmkv.Port),
+			}
+			msgencode, err := proto.Marshal(msg)
+			if err != nil {
+				logs.Error(err)
+			}
+			cluster.Raft.Apply(msgencode, time.Second)
+		}
+	}
 }

@@ -25,15 +25,22 @@ type config struct {
 	} `toml:"raft"`
 }
 
-var Ohmkvcfg config
+type leader struct {
+	Addr string
+}
+
+var Ohmkvcfg *config
+var Leader *leader
 
 func init() {
-	if _, err := toml.DecodeFile("./ohmkv.conf", &Ohmkvcfg); err != nil {
+	Ohmkvcfg = new(config)
+	if _, err := toml.DecodeFile("./ohmkv.conf", Ohmkvcfg); err != nil {
 		logs.Error(err)
 		os.Exit(1)
 	}
+	Leader = new(leader)
 	logs.SetLogger("console")
-	logs.SetLogger(logs.AdapterFile, `{"filename":"`+Ohmkvcfg.Ohmkv.LogDir+`omq.log"}`)
+	logs.SetLogger(logs.AdapterFile, `{"filename":"./omq.log"}`)
 	logs.EnableFuncCallDepth(true)
 	logs.SetLogFuncCallDepth(3)
 }

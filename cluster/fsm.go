@@ -8,6 +8,7 @@ import (
 	"github.com/astaxie/beego/logs"
 	"github.com/golang/protobuf/proto"
 	"github.com/hashicorp/raft"
+	"github.com/skywalkerlee/ohmykv/config"
 	"github.com/skywalkerlee/ohmykv/msg"
 	"github.com/skywalkerlee/ohmykv/storage"
 )
@@ -35,10 +36,12 @@ func (fsm *storageFSM) Apply(log *raft.Log) interface{} {
 	}
 	if msg.GetOp() == 1 {
 		fsm.storage.Put(msg.GetKey(), msg.GetValue())
-	} else {
+	} else if msg.GetOp() == 2 {
 		fsm.storage.Del(msg.GetKey())
+	} else {
+		config.Leader.Addr = string(msg.GetKey()) + ":" + string(msg.GetValue())
 	}
-	return nil
+	return "Apply Successful"
 }
 
 func (fsm *storageFSM) Snapshot() (raft.FSMSnapshot, error) {
