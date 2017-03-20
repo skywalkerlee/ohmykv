@@ -25,7 +25,6 @@ func main() {
 			logs.Error(err)
 			return
 		}
-		logs.Info(config.Ohmkvcfg.Raft.Addr + ":" + config.Ohmkvcfg.Ohmkv.Port)
 		_, err = msg.NewKvClient(conn).Op(context.TODO(), &msg.Req{Op: 4, Value: []byte(config.Ohmkvcfg.Raft.Addr + ":" + config.Ohmkvcfg.Raft.Port)})
 		if err != nil {
 			logs.Error(err)
