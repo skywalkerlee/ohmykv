@@ -43,13 +43,22 @@ func init() {
 	logs.SetLogger(logs.AdapterFile, `{"filename":"./omq.log"}`)
 	logs.EnableFuncCallDepth(true)
 	logs.SetLogFuncCallDepth(3)
-
 	err := os.MkdirAll(Ohmkvcfg.Raft.StorageBackendPath, 0777)
 	if err != nil {
 		logs.Error(err)
 		os.Exit(1)
 	}
 	err = os.MkdirAll(Ohmkvcfg.Raft.PeerStorage, 0777)
+	if err != nil {
+		logs.Error(err)
+		os.Exit(1)
+	}
+	err = os.MkdirAll(Ohmkvcfg.Raft.RaftLogPath, 0777)
+	if err != nil {
+		logs.Error(err)
+		os.Exit(1)
+	}
+	err = os.MkdirAll(Ohmkvcfg.Raft.ApplyLogPath, 0777)
 	if err != nil {
 		logs.Error(err)
 		os.Exit(1)

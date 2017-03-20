@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"net"
+	"os/signal"
+	"syscall"
 
 	"os"
 
@@ -31,7 +33,7 @@ func main() {
 			return
 		}
 	}
-	cluster := cluster.NewCluster(false)
+	cluster := cluster.NewCluster()
 	go cluster.Sync()
 	lis, err := net.Listen("tcp", config.Ohmkvcfg.Ohmkv.Addr+":"+config.Ohmkvcfg.Ohmkv.Port)
 	if err != nil {
@@ -40,5 +42,9 @@ func main() {
 	}
 	s := grpc.NewServer()
 	msg.RegisterKvServer(s, &rpc.Service{Cluster: cluster})
-	s.Serve(lis)
+	go s.Serve(lis)
+	sigch := make(chan os.Signal)
+	signal.Notify(sigch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGKILL)
+	<-sigch
+	cluster.Close()
 }

@@ -21,10 +21,6 @@ type Service struct {
 }
 
 func (service *Service) Op(ctx context.Context, req *msg.Req) (*msg.Resp, error) {
-	if req.GetOp() == 4 {
-		service.Cluster.Raft.AddPeer("127.0.0.1:12004")
-		return &msg.Resp{Status: 1}, nil
-	}
 	tmp, err := proto.Marshal(req)
 	if err != nil {
 		logs.Error(err)
@@ -52,4 +48,23 @@ func (service *Service) Op(ctx context.Context, req *msg.Req) (*msg.Resp, error)
 		time.Sleep(time.Millisecond * 10)
 	}
 	return nil, errors.New("cluster has no leader")
+}
+
+func (service *Service) Man(ctx context.Context, req *msg.Manreq) (*msg.Manresp, error) {
+	switch req.GetOp() {
+	case 1:
+		return &msg.Manresp{Status: 1, Body: []byte(service.Cluster.Raft.Stats()["num_peers"])}, nil
+	case 2:
+		if err := service.Cluster.Raft.AddPeer(string(req.GetValue())).Error(); err != nil {
+			return nil, err
+		}
+		return &msg.Manresp{Status: 1}, nil
+	case 3:
+		if err := service.Cluster.Raft.RemovePeer(string(req.GetValue())).Error(); err != nil {
+			return nil, err
+		}
+		return &msg.Manresp{Status: 1}, nil
+	default:
+		return nil, errors.New("Unknown option code")
+	}
 }

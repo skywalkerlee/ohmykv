@@ -3,31 +3,44 @@ package cluster
 import (
 	"fmt"
 	"os"
+	"path"
 	"time"
 
 	"github.com/astaxie/beego/logs"
 	"github.com/gogo/protobuf/proto"
 	"github.com/hashicorp/raft"
+	raftboltdb "github.com/hashicorp/raft-boltdb"
 	"github.com/skywalkerlee/ohmykv/config"
 	"github.com/skywalkerlee/ohmykv/msg"
 	"github.com/skywalkerlee/ohmykv/storage"
 )
 
 type Cluster struct {
+	rs         *storage.RocksStorage
 	Leaderaddr string
 	Raft       *raft.Raft
 }
 
-func NewCluster(add bool) *Cluster {
+func NewCluster() *Cluster {
 	cfg := raft.DefaultConfig()
-	memStore := raft.NewInmemStore()
+	fp, err := os.Create(path.Join(config.Ohmkvcfg.Raft.RaftLogPath, "raft.log"))
+	if err != nil {
+		logs.Error(err)
+		os.Exit(1)
+	}
+	cfg.LogOutput = fp
+	bdb, err := raftboltdb.NewBoltStore(path.Join(config.Ohmkvcfg.Raft.ApplyLogPath, "apply.db"))
+	if err != nil {
+		logs.Error(err)
+		os.Exit(1)
+	}
 	if err := os.RemoveAll(config.Ohmkvcfg.Raft.StorageBackendPath); err != nil {
 		logs.Error(err)
 		os.Exit(1)
 	}
 	rs := storage.NewRocksStorage()
 	fsm := newStorageFSM(rs)
-	snap, err := raft.NewFileSnapshotStore(config.Ohmkvcfg.Raft.SnapshotStorage, 3, nil)
+	snap, err := raft.NewFileSnapshotStore(config.Ohmkvcfg.Raft.SnapshotStorage, 3, os.Stdout)
 	if err != nil {
 		logs.Error(err)
 		os.Exit(1)
@@ -44,22 +57,11 @@ func NewCluster(add bool) *Cluster {
 		logs.Error(err)
 		os.Exit(1)
 	}
-	r := &raft.Raft{}
-	if add {
-		r, err = raft.NewRaft(cfg, fsm, memStore, memStore, snap, nil, tran)
-	} else {
-		r, err = raft.NewRaft(cfg, fsm, memStore, memStore, snap, peerStorage, tran)
-	}
+	r, err := raft.NewRaft(cfg, fsm, bdb, bdb, snap, peerStorage, tran)
 	if err != nil {
 		logs.Error(err)
 		os.Exit(1)
 	}
-	go func() {
-		for {
-			logs.Debug(r.Leader())
-			time.Sleep(time.Second)
-		}
-	}()
 	return &Cluster{Raft: r}
 }
 
@@ -80,4 +82,9 @@ func (cluster *Cluster) Sync() {
 			cluster.Raft.Apply(msgencode, time.Second)
 		}
 	}
+}
+
+func (cluster *Cluster) Close() {
+	cluster.Raft.Shutdown()
+	cluster.rs.Close()
 }

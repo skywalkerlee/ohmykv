@@ -9,6 +9,8 @@ It is generated from these files:
 	msg.proto
 
 It has these top-level messages:
+	Manreq
+	Manresp
 	Req
 	Resp
 	Dump
@@ -35,6 +37,54 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
+type Manreq struct {
+	Op    int32  `protobuf:"varint,1,opt,name=op" json:"op,omitempty"`
+	Value []byte `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+}
+
+func (m *Manreq) Reset()                    { *m = Manreq{} }
+func (m *Manreq) String() string            { return proto.CompactTextString(m) }
+func (*Manreq) ProtoMessage()               {}
+func (*Manreq) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+
+func (m *Manreq) GetOp() int32 {
+	if m != nil {
+		return m.Op
+	}
+	return 0
+}
+
+func (m *Manreq) GetValue() []byte {
+	if m != nil {
+		return m.Value
+	}
+	return nil
+}
+
+type Manresp struct {
+	Status int32  `protobuf:"varint,1,opt,name=status" json:"status,omitempty"`
+	Body   []byte `protobuf:"bytes,2,opt,name=body,proto3" json:"body,omitempty"`
+}
+
+func (m *Manresp) Reset()                    { *m = Manresp{} }
+func (m *Manresp) String() string            { return proto.CompactTextString(m) }
+func (*Manresp) ProtoMessage()               {}
+func (*Manresp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+func (m *Manresp) GetStatus() int32 {
+	if m != nil {
+		return m.Status
+	}
+	return 0
+}
+
+func (m *Manresp) GetBody() []byte {
+	if m != nil {
+		return m.Body
+	}
+	return nil
+}
+
 type Req struct {
 	Op    int32  `protobuf:"varint,1,opt,name=op" json:"op,omitempty"`
 	Key   []byte `protobuf:"bytes,2,opt,name=key,proto3" json:"key,omitempty"`
@@ -44,7 +94,7 @@ type Req struct {
 func (m *Req) Reset()                    { *m = Req{} }
 func (m *Req) String() string            { return proto.CompactTextString(m) }
 func (*Req) ProtoMessage()               {}
-func (*Req) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+func (*Req) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
 
 func (m *Req) GetOp() int32 {
 	if m != nil {
@@ -74,7 +124,7 @@ type Resp struct {
 func (m *Resp) Reset()                    { *m = Resp{} }
 func (m *Resp) String() string            { return proto.CompactTextString(m) }
 func (*Resp) ProtoMessage()               {}
-func (*Resp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+func (*Resp) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
 
 func (m *Resp) GetStatus() int32 {
 	if m != nil {
@@ -91,7 +141,7 @@ type Dump struct {
 func (m *Dump) Reset()                    { *m = Dump{} }
 func (m *Dump) String() string            { return proto.CompactTextString(m) }
 func (*Dump) ProtoMessage()               {}
-func (*Dump) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+func (*Dump) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
 
 func (m *Dump) GetKey() []byte {
 	if m != nil {
@@ -108,6 +158,8 @@ func (m *Dump) GetValue() []byte {
 }
 
 func init() {
+	proto.RegisterType((*Manreq)(nil), "msg.manreq")
+	proto.RegisterType((*Manresp)(nil), "msg.manresp")
 	proto.RegisterType((*Req)(nil), "msg.req")
 	proto.RegisterType((*Resp)(nil), "msg.resp")
 	proto.RegisterType((*Dump)(nil), "msg.dump")
@@ -125,6 +177,7 @@ const _ = grpc.SupportPackageIsVersion4
 
 type KvClient interface {
 	Op(ctx context.Context, in *Req, opts ...grpc.CallOption) (*Resp, error)
+	Man(ctx context.Context, in *Manreq, opts ...grpc.CallOption) (*Manresp, error)
 }
 
 type kvClient struct {
@@ -144,10 +197,20 @@ func (c *kvClient) Op(ctx context.Context, in *Req, opts ...grpc.CallOption) (*R
 	return out, nil
 }
 
+func (c *kvClient) Man(ctx context.Context, in *Manreq, opts ...grpc.CallOption) (*Manresp, error) {
+	out := new(Manresp)
+	err := grpc.Invoke(ctx, "/msg.kv/Man", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Kv service
 
 type KvServer interface {
 	Op(context.Context, *Req) (*Resp, error)
+	Man(context.Context, *Manreq) (*Manresp, error)
 }
 
 func RegisterKvServer(s *grpc.Server, srv KvServer) {
@@ -172,6 +235,24 @@ func _Kv_Op_Handler(srv interface{}, ctx context.Context, dec func(interface{}) 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Kv_Man_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Manreq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(KvServer).Man(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/msg.kv/Man",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(KvServer).Man(ctx, req.(*Manreq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Kv_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "msg.kv",
 	HandlerType: (*KvServer)(nil),
@@ -179,6 +260,10 @@ var _Kv_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Op",
 			Handler:    _Kv_Op_Handler,
+		},
+		{
+			MethodName: "Man",
+			Handler:    _Kv_Man_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -188,16 +273,19 @@ var _Kv_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("msg.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 164 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0xcc, 0x2d, 0x4e, 0xd7,
-	0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0xce, 0x2d, 0x4e, 0x57, 0xb2, 0xe5, 0x62, 0x2e, 0x4a,
-	0x2d, 0x14, 0xe2, 0xe3, 0x62, 0xca, 0x2f, 0x90, 0x60, 0x54, 0x60, 0xd4, 0x60, 0x0d, 0x62, 0xca,
-	0x2f, 0x10, 0x12, 0xe0, 0x62, 0xce, 0x4e, 0xad, 0x94, 0x60, 0x52, 0x60, 0xd4, 0xe0, 0x09, 0x02,
-	0x31, 0x85, 0x44, 0xb8, 0x58, 0xcb, 0x12, 0x73, 0x4a, 0x53, 0x25, 0x98, 0xc1, 0x62, 0x10, 0x8e,
-	0x92, 0x1c, 0x17, 0x4b, 0x51, 0x6a, 0x71, 0x81, 0x90, 0x18, 0x17, 0x5b, 0x71, 0x49, 0x62, 0x49,
-	0x69, 0x31, 0xd4, 0x0c, 0x28, 0x4f, 0x49, 0x8f, 0x8b, 0x25, 0xa5, 0x34, 0x17, 0x6e, 0x1e, 0x23,
-	0x16, 0xf3, 0x98, 0x90, 0xcc, 0x33, 0x52, 0xe4, 0x62, 0xca, 0x2e, 0x13, 0x92, 0xe6, 0x62, 0xf2,
-	0x2f, 0x10, 0xe2, 0xd0, 0x03, 0xb9, 0xb5, 0x28, 0xb5, 0x50, 0x8a, 0x13, 0xca, 0x2a, 0x2e, 0x50,
-	0x62, 0x48, 0x62, 0x03, 0xbb, 0xde, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff, 0x18, 0xc6, 0x8c, 0x30,
-	0xca, 0x00, 0x00, 0x00,
+	// 210 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x90, 0x31, 0x6b, 0x85, 0x30,
+	0x14, 0x85, 0x9b, 0xc4, 0x67, 0xfb, 0x6e, 0xa5, 0x94, 0x4b, 0x29, 0x62, 0xa1, 0x48, 0x26, 0xa7,
+	0x0c, 0x2d, 0x1d, 0x3b, 0x76, 0x2c, 0x05, 0xff, 0x41, 0xc4, 0xe0, 0x60, 0x63, 0xa2, 0x51, 0xa1,
+	0xff, 0xbe, 0x18, 0xd3, 0xea, 0x20, 0x6f, 0x3b, 0x27, 0x9c, 0x7b, 0x3e, 0x72, 0xe0, 0xac, 0x5d,
+	0x23, 0xec, 0x60, 0x46, 0x83, 0x4c, 0xbb, 0x86, 0x0b, 0x88, 0xb5, 0xec, 0x06, 0xd5, 0xe3, 0x1d,
+	0x50, 0x63, 0x53, 0x92, 0x93, 0xe2, 0x54, 0x52, 0x63, 0xf1, 0x01, 0x4e, 0xb3, 0xfc, 0x9e, 0x54,
+	0x4a, 0x73, 0x52, 0x24, 0xe5, 0x6a, 0xf8, 0x1b, 0x5c, 0xfb, 0xbc, 0xb3, 0xf8, 0x08, 0xb1, 0x1b,
+	0xe5, 0x38, 0xb9, 0x70, 0x14, 0x1c, 0x22, 0x44, 0x95, 0xa9, 0x7f, 0xc2, 0x9d, 0xd7, 0xfc, 0x1d,
+	0xd8, 0x11, 0xe3, 0x1e, 0x58, 0xab, 0xfe, 0x92, 0x8b, 0xdc, 0xa8, 0x6c, 0x4f, 0x7d, 0x86, 0xe8,
+	0x12, 0x92, 0x0b, 0x88, 0xea, 0x49, 0xff, 0xf7, 0x91, 0x83, 0xbe, 0xfd, 0x2f, 0x5e, 0x3e, 0x80,
+	0xb6, 0x33, 0x3e, 0x01, 0xfd, 0xb2, 0x78, 0x23, 0x96, 0x49, 0x06, 0xd5, 0x67, 0xe7, 0xa0, 0x9c,
+	0xe5, 0x57, 0xc8, 0x81, 0x7d, 0xca, 0x0e, 0x6f, 0xfd, 0xdb, 0x3a, 0x51, 0x96, 0x6c, 0x66, 0xc9,
+	0x54, 0xb1, 0x1f, 0xf2, 0xf5, 0x37, 0x00, 0x00, 0xff, 0xff, 0x2c, 0x9a, 0x82, 0x4e, 0x55, 0x01,
+	0x00, 0x00,
 }

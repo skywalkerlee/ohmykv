@@ -70,4 +70,5 @@ func (rs *RocksStorage) getall(ch chan *Iterm) {
 		}
 		ch <- &Iterm{Err: nil, Key: it.Key().Data(), Value: it.Value().Data()}
 	}
+	close(ch)
 }

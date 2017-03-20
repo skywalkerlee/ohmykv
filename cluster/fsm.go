@@ -51,7 +51,7 @@ func (fsm *storageFSM) Snapshot() (raft.FSMSnapshot, error) {
 }
 
 func (s *storageFSM) Restore(inp io.ReadCloser) error {
-	logs.Debug("Restore")
+	logs.Debug("Restore form Snapshot")
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	size := make([]byte, 2)
@@ -88,6 +88,7 @@ type StorageSnapshot struct {
 }
 
 func (s *StorageSnapshot) Persist(sink raft.SnapshotSink) error {
+	logs.Debug("Begin Persist")
 	defer sink.Close()
 	ch := make(chan *storage.Iterm, 1000)
 	s.storage.Recv(ch)
