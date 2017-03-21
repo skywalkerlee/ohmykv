@@ -80,7 +80,6 @@ func main() {
 			var rc msg.Kv_IteratorClient
 			if len(word) > 1 {
 				rc, err = client.Iterator(context.Background(), &msg.Iterreq{Op: 2, Seek: []byte(word[1][:len(word[1])-1])})
-				logs.Debug(word[1][:len(word[1])-1])
 				if err == io.EOF {
 					return
 				}
