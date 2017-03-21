@@ -27,13 +27,6 @@ func NewCli() *Cli {
 	return cli
 }
 
-func (cli *Cli) Op(leaderaddr string, in *msg.Req) (*msg.Resp, error) {
-	if cli.leader != leaderaddr {
-		cli.getclient(leaderaddr)
-	}
-	return msg.NewKvClient(cli.conn).Op(context.TODO(), in)
-}
-
 func (cli *Cli) getclient(leaderaddr string) error {
 	cli.lock.Lock()
 	defer cli.lock.Unlock()
@@ -51,4 +44,18 @@ func (cli *Cli) getclient(leaderaddr string) error {
 	cli.leader = leaderaddr
 	cli.conn = conn
 	return nil
+}
+
+func (cli *Cli) Write(leaderaddr string, in *msg.Writereq) (*msg.Writeresp, error) {
+	if cli.leader != leaderaddr {
+		cli.getclient(leaderaddr)
+	}
+	return msg.NewKvClient(cli.conn).Write(context.Background(), in)
+}
+
+func (cli *Cli) Man(leaderaddr string, in *msg.Manreq) (*msg.Manresp, error) {
+	if cli.leader != leaderaddr {
+		cli.getclient(leaderaddr)
+	}
+	return msg.NewKvClient(cli.conn).Man(context.TODO(), in)
 }

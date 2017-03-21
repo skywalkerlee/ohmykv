@@ -63,15 +63,14 @@ func NewCluster() *Cluster {
 		logs.Error(err)
 		os.Exit(1)
 	}
-	return &Cluster{Raft: r}
+	return &Cluster{Raft: r, rs: rs}
 }
 
 func (cluster *Cluster) Sync() {
 	for {
-		time.Sleep(time.Second * 3)
 		if cluster.Raft.Leader() == config.Ohmkvcfg.Raft.Addr+":"+config.Ohmkvcfg.Raft.Port {
 			config.Leader.Addr = config.Ohmkvcfg.Raft.Addr + ":" + config.Ohmkvcfg.Ohmkv.Port
-			msg := &msg.Req{
+			msg := &msg.Writereq{
 				Op:    3,
 				Key:   []byte(config.Ohmkvcfg.Raft.Addr),
 				Value: []byte(config.Ohmkvcfg.Ohmkv.Port),
@@ -82,6 +81,7 @@ func (cluster *Cluster) Sync() {
 			}
 			cluster.Raft.Apply(msgencode, time.Second)
 		}
+		time.Sleep(time.Second * 3)
 	}
 }
 

@@ -19,10 +19,10 @@ import (
 )
 
 func main() {
-	jion := flag.String("jion", "", "host:port of leader to join")
+	join := flag.String("join", "", "host:port of leader to join")
 	flag.Parse()
-	if *jion != "" {
-		conn, err := grpc.Dial(*jion, grpc.WithInsecure())
+	if *join != "" {
+		conn, err := grpc.Dial(*join, grpc.WithInsecure())
 		if err != nil {
 			logs.Error(err)
 			return

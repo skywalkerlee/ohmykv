@@ -28,7 +28,7 @@ func newStorageFSM(storage *storage.RocksStorage) *storageFSM {
 func (fsm *storageFSM) Apply(log *raft.Log) interface{} {
 	fsm.lock.Lock()
 	defer fsm.lock.Unlock()
-	msg := &msg.Req{}
+	msg := &msg.Writereq{}
 	err := proto.Unmarshal(log.Data, msg)
 	if err != nil {
 		logs.Error(err)
