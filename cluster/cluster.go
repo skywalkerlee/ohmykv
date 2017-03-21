@@ -23,6 +23,7 @@ type Cluster struct {
 
 func NewCluster() *Cluster {
 	cfg := raft.DefaultConfig()
+	cfg.Logger = logs.GetLogger()
 	fp, err := os.Create(path.Join(config.Ohmkvcfg.Raft.RaftLogPath, "raft.log"))
 	if err != nil {
 		logs.Error(err)
