@@ -40,7 +40,7 @@ func init() {
 		os.Exit(1)
 	}
 	logs.SetLogger("console")
-	logs.SetLogger(logs.AdapterFile, `{"filename":"./omkv.log"}`)
+	logs.SetLogger(logs.AdapterFile, `{"filename":"./omkv.log","maxdays":1}`)
 	logs.EnableFuncCallDepth(true)
 	logs.SetLogFuncCallDepth(3)
 	err := os.MkdirAll(Ohmkvcfg.Raft.StorageBackendPath, 0777)

@@ -36,6 +36,24 @@ func main() {
 			os.Exit(1)
 		}
 		word := strings.Split(line, " ")
+		if line == "iter\n" {
+			rc, err := client.Iterator(context.Background(), &msg.Iterreq{Op: 1})
+			if err == io.EOF {
+				return
+			}
+
+			for {
+				resp, err := rc.Recv()
+				if err == io.EOF {
+					break
+				}
+				if err != nil {
+					logs.Error(err)
+					return
+				}
+				logs.Info(resp)
+			}
+		}
 		switch word[0] {
 		case "get":
 			resp, err := client.Read(context.Background(), &msg.Readreq{Key: []byte(word[1][:len(word[1])-1])})
@@ -60,8 +78,9 @@ func main() {
 			logs.Info(resp.String())
 		case "iter":
 			var rc msg.Kv_IteratorClient
-			if len(word) > 2 {
-				rc, err = client.Iterator(context.Background(), &msg.Iterreq{Op: 2, Seek: []byte(word[1])})
+			if len(word) > 1 {
+				rc, err = client.Iterator(context.Background(), &msg.Iterreq{Op: 2, Seek: []byte(word[1][:len(word[1])-1])})
+				logs.Debug(word[1][:len(word[1])-1])
 				if err == io.EOF {
 					return
 				}
@@ -83,5 +102,6 @@ func main() {
 				logs.Info(resp)
 			}
 		}
+
 	}
 }

@@ -63,7 +63,7 @@ func (rs *RocksStorage) Close() {
 }
 
 func (rs *RocksStorage) Recv(ch chan *Iterm, seek ...[]byte) {
-	go rs.getall(ch)
+	go rs.getall(ch, seek...)
 }
 
 func (rs *RocksStorage) getall(ch chan *Iterm, seek ...[]byte) {
