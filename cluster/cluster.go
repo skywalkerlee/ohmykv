@@ -42,13 +42,13 @@ func NewCluster() *Cluster {
 	}
 	rs := storage.NewRocksStorage()
 	fsm := newStorageFSM(rs)
-	snap, err := raft.NewFileSnapshotStore(config.Ohmkvcfg.Raft.SnapshotStorage, 3, os.Stdout)
+	snap, err := raft.NewFileSnapshotStoreWithLogger(config.Ohmkvcfg.Raft.SnapshotStorage, 3, cfg.Logger)
 	if err != nil {
 		logs.Error(err)
 		os.Exit(1)
 	}
 	tranAddr := fmt.Sprintf("%s:%s", config.Ohmkvcfg.Raft.Addr, config.Ohmkvcfg.Raft.Port)
-	tran, err := raft.NewTCPTransport(tranAddr, nil, 3, 2*time.Second, nil)
+	tran, err := raft.NewTCPTransportWithLogger(tranAddr, nil, 3, 2*time.Second, cfg.Logger)
 	if err != nil {
 		logs.Error(err)
 		os.Exit(1)
