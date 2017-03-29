@@ -1,10 +1,6 @@
 package storage
 
 import (
-	"sync/atomic"
-
-	"runtime"
-
 	"github.com/astaxie/beego/logs"
 	"github.com/skywalkerlee/ohmykv/config"
 	"github.com/tecbot/gorocksdb"
@@ -17,10 +13,7 @@ type Iterm struct {
 }
 
 type RocksStorage struct {
-	keyLock int32
-	opLock  int32
-	keyOP   []byte
-	db      *gorocksdb.DB
+	db *gorocksdb.DB
 }
 
 var rs *RocksStorage
@@ -41,31 +34,16 @@ func NewRocksStorage() *RocksStorage {
 	}
 	rs = &RocksStorage{}
 	rs.db = db
-	rs.keyLock = 0
-	rs.opLock = 0
 	return rs
 }
 
-func (rs *RocksStorage) Put(key []byte, value []byte) (err error) {
-	atomic.CompareAndSwapInt32(&rs.opLock, 0, 1)
-	rs.keyOP = key
+func (rs *RocksStorage) Put(key []byte, value []byte) error {
 	wo := gorocksdb.NewDefaultWriteOptions()
 	defer wo.Destroy()
-	err = rs.db.Put(wo, key, value)
-	atomic.CompareAndSwapInt32(&rs.opLock, 1, 0)
-	return
+	return rs.db.Put(wo, key, value)
 }
 
 func (rs *RocksStorage) Get(key []byte) ([]byte, error) {
-	for {
-		if !atomic.CompareAndSwapInt32(&rs.opLock, 0, 0) {
-			if string(key) == string(rs.keyOP) {
-				runtime.Gosched()
-				continue
-			}
-		}
-		break
-	}
 	ro := gorocksdb.NewDefaultReadOptions()
 	defer ro.Destroy()
 	slice, err := rs.db.Get(ro, key)
